@@ -40,7 +40,7 @@ export default function HomePage() {
       canvas.height = canvas.offsetHeight;
       shipRef.current.x = canvas.width / 2 - shipRef.current.width / 2;
 
-      starsRef.current = Array.from({ length: 120 }).map(() => ({
+      starsRef.current = Array.from({ length: 200 }).map(() => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         speed: 0.5 + Math.random() * 1.5,
@@ -69,7 +69,7 @@ export default function HomePage() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Starfield
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
       starsRef.current.forEach((star) => {
         star.y += star.speed;
         if (star.y > canvas.height) {
@@ -80,25 +80,27 @@ export default function HomePage() {
       });
 
       // Ship movement
-      if (keysRef.current.left) shipRef.current.x -= 5;
-      if (keysRef.current.right) shipRef.current.x += 5;
+      if (keysRef.current.left) shipRef.current.x -= 6;
+      if (keysRef.current.right) shipRef.current.x += 6;
 
       shipRef.current.x = Math.max(
         0,
         Math.min(canvas.width - shipRef.current.width, shipRef.current.x)
       );
 
+      const shipY = canvas.height - 100;
+
       // Draw ship
       ctx.fillStyle = "#ff2fae";
       ctx.fillRect(
         shipRef.current.x,
-        canvas.height - 60,
+        shipY,
         shipRef.current.width,
         shipRef.current.height
       );
 
       // Spawn asteroids
-      if (time - lastSpawn > 700) {
+      if (time - lastSpawn > 550) {
         spawnAsteroid();
         lastSpawn = time;
       }
@@ -111,8 +113,6 @@ export default function HomePage() {
         ctx.arc(a.x + a.size / 2, a.y + a.size / 2, a.size / 2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Collision
-        const shipY = canvas.height - 60;
         const collision =
           a.x < shipRef.current.x + shipRef.current.width &&
           a.x + a.size > shipRef.current.x &&
@@ -123,22 +123,20 @@ export default function HomePage() {
           setGameOver(true);
         }
 
-        // Near miss
         const near =
           !collision &&
-          a.y + a.size > shipY - 10 &&
-          a.y < shipY + shipRef.current.height + 10 &&
-          Math.abs(a.x - shipRef.current.x) < 60;
+          a.y + a.size > shipY - 20 &&
+          a.y < shipY + shipRef.current.height + 20 &&
+          Math.abs(a.x - shipRef.current.x) < 80;
 
         if (near) {
           setNearMiss(true);
-          setTimeout(() => setNearMiss(false), 150);
+          setTimeout(() => setNearMiss(false), 120);
         }
       });
 
-      // Cleanup
       asteroidsRef.current = asteroidsRef.current.filter(
-        (a) => a.y < canvas.height + 50
+        (a) => a.y < canvas.height + 80
       );
 
       setScore((s) => s + 1);
@@ -191,11 +189,12 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="flex-1 px-4 pb-8">
-        <div className="relative h-full rounded-lg border border-border bg-card overflow-hidden">
+      {/* Force the gameplay area to truly fill remaining viewport height */}
+      <section className="flex-1 flex flex-col px-4 pb-8 min-h-0">
+        <div className="relative flex-1 min-h-0 w-full rounded-lg border border-border bg-card overflow-hidden">
           <canvas
             ref={canvasRef}
-            className={`w-full h-full ${nearMiss ? "opacity-80" : "opacity-100"}`}
+            className={`block w-full h-full ${nearMiss ? "opacity-80" : "opacity-100"}`}
           />
 
           {gameOver && (
